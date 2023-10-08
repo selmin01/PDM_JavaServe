@@ -27,9 +27,9 @@ public class Cliente {
             // Envie um comando 
 
             // Envie a imagem para o servidor
-            File imagem = new File("../../../imagem.jpg");
-            FileInputStream fileInputStream = new FileInputStream(imagem);
-            IOUtils.copy(fileInputStream, FileOutputStream);
+            // File imagem = new File("../../../imagem.jpg");
+            // FileInputStream fileInputStream = new FileInputStream(imagem);
+            // IOUtils.copy(fileInputStream, FileOutputStream);
 
             System.out.println("Imagem enviada com sucesso.");
 
