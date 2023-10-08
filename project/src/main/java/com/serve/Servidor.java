@@ -5,14 +5,13 @@ import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.client.ClientHandler;
 
 public class Servidor {
 
     private static AtomicInteger clientCounter = new AtomicInteger(0);
-    private static ArrayList<ClientHandler> connectedClients = new ArrayList<>();
+    private static List<ClientHandler> connectedClients = new ArrayList<>();
 
     public static void main(String[] args) throws IOException {
         ServerSocket server = new ServerSocket(12345);
@@ -40,7 +39,7 @@ public class Servidor {
             registrarLog(logEntry);
 
             // Crie uma nova thread para lidar com o cliente
-            ClientHandler clientHandler = new ClientHandler(clientSocket, clientId);
+            ClientHandler clientHandler = new ClientHandler(clientSocket, clientId, connectedClients);
             connectedClients.add(clientHandler);
             Thread clientThread = new Thread(clientHandler);
             clientThread.start();
@@ -70,14 +69,4 @@ public class Servidor {
             writer.println("Cliente #" + clientHandler.getClientId());
         }
     }
-
-    // public static void removeClient(int clientId) {
-    //     ClientHandler thisClientHandler;
-    //     for (ClientHandler clientHandler : connectedClients) {
-    //         if(clientHandler.getClientId() == clientId){
-    //             thisClientHandler = clientHandler;
-    //         }
-    //     }
-    //     connectedClients.remove(thisClientHandler);
-    // }
 }

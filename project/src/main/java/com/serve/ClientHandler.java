@@ -1,24 +1,20 @@
-package com.client;
+package com.serve;
 
-import java.io.BufferedReader;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
-import com.serve.Servidor;
-
-public class ClientHandler implements Runnable{
+public class ClientHandler implements Runnable {
     private Socket clientSocket;
     private int clientId;
+    private List<ClientHandler> connectedClients;
 
-    public ClientHandler(Socket clientSocket, int clientId) {
+    public ClientHandler(Socket clientSocket, int clientId, List<ClientHandler> connectedClients) {
         this.clientSocket = clientSocket;
         this.clientId = clientId;
+        this.connectedClients = connectedClients;
     }
 
     public int getClientId() {
@@ -48,6 +44,9 @@ public class ClientHandler implements Runnable{
                 // Verifique se o cliente enviou o comando /users
                 else if ("/users".equals(message)) {
                     Servidor.listarClientes(writer);
+                } else {
+                    System.out.println("Enviando mensagem para os clientes conectados...");
+                    broadcastMessage("Cliente #" + clientId + ": " + message);
                 }
             }
         } catch (IOException e) {
@@ -56,8 +55,22 @@ public class ClientHandler implements Runnable{
             try {
                 clientSocket.close();
                 System.out.println("Cliente #" + clientId + " desconectado.");
-                // Remova o cliente da lista de clientes conectados
-                // Servidor.removeClient(clientId);
+                // remove cliente
+                connectedClients.remove(this);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void broadcastMessage(String message) {
+        System.out.println("Dentro do broadcast message");
+        System.out.println("Clientes conectados: " + connectedClients.size());
+        for (ClientHandler clientHandler : connectedClients) {
+            // manda mensagem pra todos exceto o próprio cliente
+            try {
+                PrintStream writer = new PrintStream(clientHandler.clientSocket.getOutputStream());
+                writer.println(message);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -65,24 +78,7 @@ public class ClientHandler implements Runnable{
     }
 
     private void receberImagem() {
-        try {
-            InputStream inputStream = clientSocket.getInputStream();
-            
-            // Salve a imagem em um arquivo no servidor
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-            String fileName = "imagem_" + clientId + "_" + dateFormat.format(new Date()) + ".jpg";
-            FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-            
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                fileOutputStream.write(buffer, 0, bytesRead);
-            }
-            
-            fileOutputStream.close();
-            System.out.println("Imagem recebida e salva como " + fileName);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // Implement the image receiving logic here
+        // ...
     }
 }

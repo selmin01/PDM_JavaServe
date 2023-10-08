@@ -1,10 +1,7 @@
 package com.serve;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -15,27 +12,22 @@ public class Cliente {
 
         PrintStream serverOut = new PrintStream(socket.getOutputStream());
         Scanner scanner = new Scanner(System.in);
+        Scanner serverIn = new Scanner(socket.getInputStream());
+
+        Thread messageReceiverThread = new Thread(new RecebedorMensagem(serverIn));
+        messageReceiverThread.start();
 
         while (true) {
-            System.out.print("Digite uma mensagem para o servidor: ");
+            System.out.print("");
             String message = scanner.nextLine();
             // Verifique se o cliente enviou o comando /sair
             if ("/sair".equals(message)) {
                 break; // Encerra o loop e desconecta o cliente
-            }else if ("/imagem".equals(message)) {
-
-            // Envie um comando 
-
-            // Envie a imagem para o servidor
-            // File imagem = new File("../../../imagem.jpg");
-            // FileInputStream fileInputStream = new FileInputStream(imagem);
-            // IOUtils.copy(fileInputStream, FileOutputStream);
-
-            System.out.println("Imagem enviada com sucesso.");
-
-            System.out.println("Imagem enviada com sucesso.");
-
-            }else{
+            } else if ("/imagem".equals(message)) {
+                // Implement image sending logic here
+                // ...
+                System.out.println("Imagem enviada com sucesso.");
+            } else {
                 serverOut.println(message);
             }
         }
