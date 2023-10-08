@@ -25,14 +25,7 @@ public class Cliente {
         while (true) {
             System.out.print("");
             String message = scanner.nextLine();
-            // Verifique se o cliente enviou o comando /sair
-            if ("/sair".equals(message)) {
-                break; // Encerra o loop e desconecta o cliente
-            } else if ("/imagem".equals(message)) {
-                System.out.println("Imagem enviada com sucesso.");
-            } else {
-                serverOut.println(message);
-            }
+            serverOut.println(message);  
         }
     }
 }

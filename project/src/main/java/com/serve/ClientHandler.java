@@ -50,10 +50,12 @@ public class ClientHandler implements Runnable {
                 }
                 // Verifique se o cliente enviou o comando /users
                 else if ("/users".equals(message)) {
-                    Servidor.listarClientes(writer);
-                } else {
-                    System.out.println("Enviando mensagem para os clientes conectados...");
+                    listarClientes(writer);
+                } else if (message.startsWith("/send")) {
                     broadcastMessage(message);
+                }
+                else {
+                    notValidCommandError(message);
                 }
             }
         } catch (IOException e) {
@@ -71,14 +73,33 @@ public class ClientHandler implements Runnable {
     }
 
     private void broadcastMessage(String message) {
-        System.out.println("Dentro do broadcast message");
-        System.out.println("Clientes conectados: " + connectedClients.size());
+        String messageToSend = message.substring("/send ".length());
         for (ClientHandler clientHandler : connectedClients) {
             // manda mensagem pra todos exceto o próprio cliente
             if (clientHandler != this) {
                 try {
                     PrintStream writer = new PrintStream(clientHandler.clientSocket.getOutputStream());
-                    writer.println(clientName + " diz: " + message);
+                    writer.println(clientName + " escreveu: " + messageToSend);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void listarClientes(PrintWriter writer) {
+        writer.println("Usuários conectados:");
+        for (ClientHandler clientHandler : connectedClients) {
+            writer.println("Usuário: " + clientHandler.getClientName());
+        }
+    }
+
+    private void notValidCommandError(String message) {
+        for (ClientHandler clientHandler : connectedClients) {
+            if (clientHandler == this) {
+                try {
+                    PrintStream writer = new PrintStream(clientHandler.clientSocket.getOutputStream());
+                    writer.println("Comando inválido: utilize /send /users /imagem /sair");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
