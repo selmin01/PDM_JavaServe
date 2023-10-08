@@ -1,9 +1,7 @@
 package com.serve;
 
 import java.io.*;
-import java.net.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.net.Socket;
 import java.util.List;
 
 public class ClientHandler implements Runnable {
@@ -51,10 +49,9 @@ public class ClientHandler implements Runnable {
                 // Verifique se o cliente enviou o comando /users
                 else if ("/users".equals(message)) {
                     listarClientes(writer);
-                } else if (message.startsWith("/send")) {
-                    broadcastMessage(message);
-                }
-                else {
+                } else if (message.startsWith("/send ")) {
+                    handleSendCommand(message);
+                } else {
                     notValidCommandError(message);
                 }
             }
@@ -72,14 +69,52 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void broadcastMessage(String message) {
-        String messageToSend = message.substring("/send ".length());
+    private void handleSendCommand(String message) {
+        String[] parts = message.split(" ", 3);
+        if (parts.length == 3) {
+            String recipientName = parts[1];
+            String messageToSend = parts[2];
+            System.out.println("Mensagem direta a ser enviada para " + recipientName + ": " + messageToSend);
+            sendDirectMessage(recipientName, clientName + " enviou uma mensagem: " + messageToSend);
+        } else {
+            invalidSendFormat();
+        }
+    }
+
+    private void sendDirectMessage(String recipientName, String message) {
         for (ClientHandler clientHandler : connectedClients) {
-            // manda mensagem pra todos exceto o próprio cliente
-            if (clientHandler != this) {
+            if (clientHandler.getClientName().equals(recipientName)) {
                 try {
                     PrintStream writer = new PrintStream(clientHandler.clientSocket.getOutputStream());
-                    writer.println(clientName + " escreveu: " + messageToSend);
+                    writer.println(message);
+                    return; // Envio concluído
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        notValidUserError();
+    }
+
+    private void invalidSendFormat() {
+        for (ClientHandler clientHandler : connectedClients) {
+            if (clientHandler == this) {
+                try {
+                    PrintStream writer = new PrintStream(clientHandler.clientSocket.getOutputStream());
+                    writer.println("Formato inválido para mensagem direta. Use '/send [nome] [mensagem]'.");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void notValidUserError() {
+        for (ClientHandler clientHandler : connectedClients) {
+            if (clientHandler == this) {
+                try {
+                    PrintStream writer = new PrintStream(clientHandler.clientSocket.getOutputStream());
+                    writer.println("Usuário não encontrado: utilize /users para listar os usuários conectados");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -108,5 +143,7 @@ public class ClientHandler implements Runnable {
     }
 
     private void receberImagem() {
+        // Implemente a lógica de recebimento de imagem aqui
+        // ...
     }
 }
