@@ -14,6 +14,11 @@ public class Cliente {
         Scanner scanner = new Scanner(System.in);
         Scanner serverIn = new Scanner(socket.getInputStream());
 
+        System.out.print("Digite seu nome: ");
+        String userName = scanner.nextLine();
+
+        serverOut.println(userName);
+
         Thread messageReceiverThread = new Thread(new RecebedorMensagem(serverIn));
         messageReceiverThread.start();
 
@@ -24,8 +29,6 @@ public class Cliente {
             if ("/sair".equals(message)) {
                 break; // Encerra o loop e desconecta o cliente
             } else if ("/imagem".equals(message)) {
-                // Implement image sending logic here
-                // ...
                 System.out.println("Imagem enviada com sucesso.");
             } else {
                 serverOut.println(message);

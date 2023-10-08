@@ -10,6 +10,7 @@ public class ClientHandler implements Runnable {
     private Socket clientSocket;
     private int clientId;
     private List<ClientHandler> connectedClients;
+    private String clientName;
 
     public ClientHandler(Socket clientSocket, int clientId, List<ClientHandler> connectedClients) {
         this.clientSocket = clientSocket;
@@ -21,15 +22,21 @@ public class ClientHandler implements Runnable {
         return clientId;
     }
 
+    public String getClientName() {
+        return clientName;
+    }
+
     @Override
     public void run() {
         try (
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)
         ) {
+            clientName = reader.readLine();
+
             String message;
             while ((message = reader.readLine()) != null) {
-                System.out.println("Cliente #" + clientId + " digitou: " + message);
+                System.out.println(clientName + " digitou: " + message);
 
                 // Verifique se o cliente está enviando uma imagem
                 if ("/imagem".equals(message)) {
@@ -46,7 +53,7 @@ public class ClientHandler implements Runnable {
                     Servidor.listarClientes(writer);
                 } else {
                     System.out.println("Enviando mensagem para os clientes conectados...");
-                    broadcastMessage("Cliente #" + clientId + ": " + message);
+                    broadcastMessage(message);
                 }
             }
         } catch (IOException e) {
@@ -54,7 +61,7 @@ public class ClientHandler implements Runnable {
         } finally {
             try {
                 clientSocket.close();
-                System.out.println("Cliente #" + clientId + " desconectado.");
+                System.out.println(clientName + " desconectado.");
                 // remove cliente
                 connectedClients.remove(this);
             } catch (IOException e) {
@@ -68,17 +75,17 @@ public class ClientHandler implements Runnable {
         System.out.println("Clientes conectados: " + connectedClients.size());
         for (ClientHandler clientHandler : connectedClients) {
             // manda mensagem pra todos exceto o próprio cliente
-            try {
-                PrintStream writer = new PrintStream(clientHandler.clientSocket.getOutputStream());
-                writer.println(message);
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (clientHandler != this) {
+                try {
+                    PrintStream writer = new PrintStream(clientHandler.clientSocket.getOutputStream());
+                    writer.println(clientName + " diz: " + message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
     private void receberImagem() {
-        // Implement the image receiving logic here
-        // ...
     }
 }
