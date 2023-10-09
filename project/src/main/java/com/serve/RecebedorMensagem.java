@@ -13,8 +13,10 @@ public class RecebedorMensagem implements Runnable {
     public void run() {
         try {
             while (true) {
-                String serverMessage = serverIn.nextLine();
-                System.out.println(serverMessage);
+                if (serverIn.hasNextLine()) {
+                    String serverMessage = serverIn.nextLine();
+                    System.out.println(serverMessage);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -24,8 +24,10 @@ public class Cliente {
 
         while (true) {
             System.out.print("");
-            String message = scanner.nextLine();
-            serverOut.println(message);  
+            if (scanner.hasNextLine()) {
+                String message = scanner.nextLine();
+                serverOut.println(message);
+            }
         }
     }
 }

@@ -74,7 +74,7 @@ public class ClientHandler implements Runnable {
         if (parts.length >= 3 && "/send".equals(parts[0])) {
             String recipientName = parts[2];
             String messageType = parts[1];
-            String messageContent = message.substring(message.indexOf(parts[2]) + parts[2].length() + 1);
+            String messageContent = parts[3];
             
             System.out.println("messageType: " + messageType);
             if ("message".equals(messageType)) {
@@ -95,10 +95,44 @@ public class ClientHandler implements Runnable {
     }
     
     private void sendFile(String recipientName, String filePath) {
-        // Add logic to send the file to the specified recipient here
-        // You can use the sendFile method from the previous response
-        // and send the file to the recipient using recipientName
+        System.out.println("Enviando arquivo " + filePath + " para " + recipientName);
+        
+        try {
+            File sourceFile = new File(filePath);
+            FileInputStream fileInputStream = new FileInputStream(sourceFile);
+        
+            ClientHandler recipientClient = null;
+            for (ClientHandler client : connectedClients) {
+                if (client.getClientName().equals(recipientName)) {
+                    recipientClient = client;
+                    break;
+                }
+            }
+        
+            if (recipientClient != null) {
+                OutputStream recipientOutputStream = recipientClient.clientSocket.getOutputStream();
+        
+                String transferCommand = "/file " + clientName + " " + sourceFile.getName();
+                recipientOutputStream.write(transferCommand.getBytes());
+    
+                byte[] fileData = new byte[(int) sourceFile.length()];
+                fileInputStream.read(fileData);
+                
+                recipientOutputStream.write(fileData);
+                recipientOutputStream.flush();
+        
+                System.out.println("Arquivo " + filePath + " enviado com sucesso para " + recipientName);
+        
+                fileInputStream.close();
+            } else {
+                System.out.println("Usuário não encontrado: " + recipientName);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+    
+    
     
 
     private void sendDirectMessage(String recipientName, String message) {
