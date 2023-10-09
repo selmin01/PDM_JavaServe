@@ -70,16 +70,36 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleSendCommand(String message) {
-        String[] parts = message.split(" ", 3);
-        if (parts.length == 3) {
-            String recipientName = parts[1];
-            String messageToSend = parts[2];
-            System.out.println("Mensagem direta a ser enviada para " + recipientName + ": " + messageToSend);
-            sendDirectMessage(recipientName, clientName + " enviou uma mensagem: " + messageToSend);
+        String[] parts = message.split(" ", 4);
+        if (parts.length >= 3 && "/send".equals(parts[0])) {
+            String recipientName = parts[2];
+            String messageType = parts[1];
+            String messageContent = message.substring(message.indexOf(parts[2]) + parts[2].length() + 1);
+            
+            System.out.println("messageType: " + messageType);
+            if ("message".equals(messageType)) {
+                sendMessage(recipientName, messageContent);
+            } else if ("file".equals(messageType)) {
+                sendFile(recipientName, messageContent);
+            } else {
+                invalidSendFormat();
+            }
         } else {
             invalidSendFormat();
         }
     }
+    
+    private void sendMessage(String recipientName, String message) {
+        String formattedMessage = clientName + " escreveu: " + message;
+        sendDirectMessage(recipientName, formattedMessage);
+    }
+    
+    private void sendFile(String recipientName, String filePath) {
+        // Add logic to send the file to the specified recipient here
+        // You can use the sendFile method from the previous response
+        // and send the file to the recipient using recipientName
+    }
+    
 
     private void sendDirectMessage(String recipientName, String message) {
         for (ClientHandler clientHandler : connectedClients) {
@@ -101,7 +121,7 @@ public class ClientHandler implements Runnable {
             if (clientHandler == this) {
                 try {
                     PrintStream writer = new PrintStream(clientHandler.clientSocket.getOutputStream());
-                    writer.println("Formato inválido para mensagem direta. Use '/send [nome] [mensagem]'.");
+                    writer.println("Formato inválido para mensagem direta. Use '/send [message || file] [nome] [mensagem]'.");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
