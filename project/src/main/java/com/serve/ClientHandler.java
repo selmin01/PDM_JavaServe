@@ -95,12 +95,10 @@ public class ClientHandler implements Runnable {
     }
     
     private void sendFile(String recipientName, String filePath) {
-        System.out.println("Enviando arquivo " + filePath + " para " + recipientName);
-        
         try {
             File sourceFile = new File(filePath);
             FileInputStream fileInputStream = new FileInputStream(sourceFile);
-        
+    
             ClientHandler recipientClient = null;
             for (ClientHandler client : connectedClients) {
                 if (client.getClientName().equals(recipientName)) {
@@ -108,21 +106,27 @@ public class ClientHandler implements Runnable {
                     break;
                 }
             }
-        
-            if (recipientClient != null) {
-                OutputStream recipientOutputStream = recipientClient.clientSocket.getOutputStream();
-        
-                String transferCommand = "/file " + clientName + " " + sourceFile.getName();
-                recipientOutputStream.write(transferCommand.getBytes());
     
-                byte[] fileData = new byte[(int) sourceFile.length()];
-                fileInputStream.read(fileData);
-                
-                recipientOutputStream.write(fileData);
-                recipientOutputStream.flush();
-        
+            if (recipientClient != null) {
+                PrintWriter recipientWriter = new PrintWriter(recipientClient.clientSocket.getOutputStream(), true);
+    
+                // Envia comando para indicar o início do envio do arquivo
+                String startFileCommand = "/start_file " + clientName + " " + filePath;
+                recipientWriter.println(startFileCommand);
+    
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+    
+                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                    recipientClient.clientSocket.getOutputStream().write(buffer, 0, bytesRead);
+                }
+    
+                // Envia comando para indicar o fim do envio do arquivo
+                String endFileCommand = "/fim_envio";
+                recipientWriter.println(endFileCommand);
+    
                 System.out.println("Arquivo " + filePath + " enviado com sucesso para " + recipientName);
-        
+    
                 fileInputStream.close();
             } else {
                 System.out.println("Usuário não encontrado: " + recipientName);
@@ -131,6 +135,7 @@ public class ClientHandler implements Runnable {
             e.printStackTrace();
         }
     }
+    
     
     
     
